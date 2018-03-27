@@ -1,0 +1,11 @@
+{
+  "name": "Modeling-of-Information-System",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/kosachemoto/Modeling-of-Information-Systems.git",
+  "author": "Nikita Kosachev <kosachev.a.nikita@gmail.com>",
+  "license": "MIT",
+  "scripts": {
+    "lab-1": "node lab-1/index.js"
+  }
+}
