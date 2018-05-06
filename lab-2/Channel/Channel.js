@@ -3,15 +3,25 @@
 class Channel {
   constructor() {
     this.incomingFlow = [];
+    this.serviceEndTime = 0;
   }
 
   AddApplication(application) {
-    this.incomingFlow.push(application);
-  }
+    let waitingTime = this.serviceEndTime - application.arrivalTime;
 
-  get lastApplication() {
-    let lastItemIndex = this.incomingFlow.length - 1;
-    return this.incomingFlow[lastItemIndex];
+    if (waitingTime > 0) {
+      // Заявка ожидает, пока канал освободится
+      application.waitingTime = waitingTime;
+      application.serviceStartTime = this.serviceEndTime + waitingTime;
+    } else {
+      // Канал ожидает поступления заявки 
+      application.serviceStartTime = this.serviceEndTime + Math.abs(waitingTime);
+    }
+
+    application.serviceEndTime = application.serviceStartTime + application.serviceTime;
+    this.serviceEndTime = application.serviceEndTime;
+
+    this.incomingFlow.push(application);
   }
 }
 
