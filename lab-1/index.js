@@ -1,10 +1,13 @@
 'use strict';
 
-const membersFlow  = 1.5; // Поток сотрудников ( чел. / мин. )
-const servicesTime = 2; // Среднее время обслуживание сотрудника ( чел. / мин. )
-const n = 2; // Каналов по умолчанию
+// Интенсивность входного потока 
+const INTENCITY_INCOMING_FLOW = 30; 
+// Интенсивность потока обслуживания 
+const INTENCITY_SERVICE_FLOW = 40; 
+// Количество каналов
+const CHANNELS_COUNT = 2; 
 
-let fact = (x) => {
+function fact(x) {
   let result = 1;
 
   for (let i = 1; i <= x; i++) {
@@ -14,22 +17,17 @@ let fact = (x) => {
   return result;
 };
 
-// Интенсивность потока сотрудников
-let getFlowIntencity = (servicesTime) => {
-  return 1 / servicesTime;
-};
-
 // Коэффициент использования СМО. QS - ( Queueing System )
-let getQSUtilizationRate = (membersFlow, flowIntencity, n) => {
-  return membersFlow / flowIntencity / n;
+let GetUseRate = (INTENCITY_INCOMING_FLOW, INTENCITY_SERVICE_FLOW, CHANNELS_COUNT) => {
+  return INTENCITY_INCOMING_FLOW / INTENCITY_SERVICE_FLOW / CHANNELS_COUNT;
 };
 
 // Минимальное число каналов для того, чтобы очередь не росла до бесконечности
-let getMinN = (membersFlow, flowIntencity) => {
+let getminimalChannelsCount = (INTENCITY_SERVICE_FLOW, INTENCITY_INCOMING_FLOW) => {
   let i = 0;
 
   while (true) {
-    if (1 > getQSUtilizationRate(membersFlow, flowIntencity, i)) {
+    if (1 > GetUseRate(INTENCITY_SERVICE_FLOW, INTENCITY_INCOMING_FLOW, i)) {
       return i;
     } else {
       i++;
@@ -38,44 +36,44 @@ let getMinN = (membersFlow, flowIntencity) => {
 };
 
 // Предельная вероятность состояния n-канальной СМО
-let getCriticalProbability = (QSUtilizationRate, n) => {
-  let result = 0;
+let getCriticalProbability = (useRate, CHANNELS_COUNT) => {
+  let result = 1;
 
-  for (let i = 0; i <= n; i++) {
-    result += (Math.pow(QSUtilizationRate, n)) / ((n - QSUtilizationRate) * fact(n));
+  for (let i = 2; i <= CHANNELS_COUNT; i++) {
+    result += (Math.pow(useRate, CHANNELS_COUNT)) / ((CHANNELS_COUNT - useRate) * fact(CHANNELS_COUNT));
   }
   return Math.pow(result, -1);
 };
 
 // Вероятность нахождения в очереди k сотрудников
-let getInQueueProbability = (QSUtilizationRate, k) => {
-  return Math.pow(QSUtilizationRate, k) * criticalProbability / fact(k)
+let getInQueueProbability = (useRate, k) => {
+  return Math.pow(useRate, k) * criticalProbability / fact(k)
 };
 
 // Вероятность отказа
-let getFailureProbability = (membersFlow, flowIntencity) => {
-  return membersFlow / (membersFlow + flowIntencity);
+let getFailureProbability = (INTENCITY_SERVICE_FLOW, INTENCITY_INCOMING_FLOW) => {
+  return INTENCITY_INCOMING_FLOW / (INTENCITY_SERVICE_FLOW + INTENCITY_INCOMING_FLOW);
 };
 
 // Относительная пропускная способность
-let getRelativeBandwidth = (flowIntencity, membersFlow) => {
-  return flowIntencity / (flowIntencity + membersFlow);
+let getRelativeBandwidth = (failureProbability) => {
+  return 1 - failureProbability;
 };
 
 // Абсолютная пропускная способность
-let getAbsoluteBandwidth = (membersFlow, relativeThroughput) => {
-  return membersFlow * relativeThroughput;
+let getAbsoluteBandwidth = (INTENCITY_INCOMING_FLOW, relativeBandwidth) => {
+  return INTENCITY_INCOMING_FLOW * relativeBandwidth;
 };
 
 // Среднее число сотрудников в очереди
-let getInQueueMembers = (QSUtilizationRate, criticalProbability, n) => {
-  return (Math.pow(QSUtilizationRate, n + 1) * criticalProbability) /
-    (n * fact(n)) * Math.pow(1 - QSUtilizationRate / n, -2);
+let getInQueueMembers = (useRate, criticalProbability, n) => {
+  return (Math.pow(useRate, n + 1) * criticalProbability) /
+    (n * fact(n)) * Math.pow(1 - useRate / n, -2);
 };
 
 // Среднее число сотрудников, находящихся на обслуживании
-let getInServicesMembers = (QSUtilizationRate, relativeBandwidth) => {
-  return QSUtilizationRate * relativeBandwidth;
+let getInServicesMembers = (useRate, relativeBandwidth) => {
+  return useRate * relativeBandwidth;
 };
 
 // Среднее число сотрудников в системе
@@ -84,62 +82,52 @@ let getInSystemMembers = (inQueueMembers, inServicesMembers) => {
 };
 
 // Среднее время пребывание сотрудника в очереди
-let getInQueueMembersTime = (inQueueMembers, membersFlow, relativeBandwidth) => {
-  return inQueueMembers / (membersFlow * relativeBandwidth);
+let getInQueueMembersTime = (inQueueMembers, INTENCITY_INCOMING_FLOW, relativeBandwidth) => {
+  return inQueueMembers / (INTENCITY_INCOMING_FLOW * relativeBandwidth);
 };
 
 // Среднее время пребывания сотрудника в системе
-let getInSystemMembersTime = (inSystemMembers, membersFlow, relativeBandwidth) => {
-  return inSystemMembers / (membersFlow * relativeBandwidth);
+let getInSystemMembersTime = (inSystemMembers, INTENCITY_INCOMING_FLOW, relativeBandwidth) => {
+  return inSystemMembers / (INTENCITY_INCOMING_FLOW * relativeBandwidth);
 };
 
-console.log('# LAB-1\n');
-console.log('# Начальные значения');
-console.log('> Поток сотрудников ( чел. / мин. ): ', membersFlow);
-console.log('> Среднее время обслуживания сотрудника ( чел. / мин. ): ', servicesTime);
-console.log('> Количество каналов по умолчанию: ', n);
-console.log('\n# Вычисления');
+console.log('> INTENCITY INCOMING FLOW: ' + INTENCITY_INCOMING_FLOW);
+console.log('> INTENCITY SERVICE FLOW: ' + INTENCITY_SERVICE_FLOW);
+console.log('> CHANNELS COUNT: ' + CHANNELS_COUNT + '\n');
 
-let flowIntencity = getFlowIntencity(servicesTime);
-console.log('> Интенсивность потока сотрудников ( в минуту ): ' + flowIntencity);
+let useRate = GetUseRate(INTENCITY_INCOMING_FLOW, INTENCITY_SERVICE_FLOW, CHANNELS_COUNT);
+console.log('> Use rate ( for CHANNELS_COUNT = ' + CHANNELS_COUNT + ' ): ' + useRate);
 
-let QSUtilizationRate = getQSUtilizationRate(membersFlow, flowIntencity, n);
-console.log('> Коэффициент использования СМО ( при n = ' + n + ' ): ' + QSUtilizationRate);
-
-let minN = getMinN(membersFlow, flowIntencity);
-console.log('> Кооличество каналов, при котором очередь не будет возрастать до бесконечности: ', minN);
-
-QSUtilizationRate = getQSUtilizationRate(membersFlow, flowIntencity, minN);
-console.log('> Коэффициент использования СМО ( при n = ' + minN + ' ): ' + QSUtilizationRate);
-
-QSUtilizationRate = getQSUtilizationRate(membersFlow, flowIntencity, 1);
-let criticalProbability = getCriticalProbability(QSUtilizationRate, minN);
-console.log('> Предельная вероятность: ', criticalProbability);
+let minimalChannelsCount = getminimalChannelsCount(INTENCITY_SERVICE_FLOW, INTENCITY_INCOMING_FLOW);
+console.log('> Minimal CHANNELS_COUNT for non infinite queue: ' + minimalChannelsCount);
+// > We are here 
+let criticalProbability = getCriticalProbability(useRate, CHANNELS_COUNT);
+console.log('> Average applications in queue count: ' + criticalProbability + '\n');
 
 for (let i = 1; i <= 5; i++) {
-  console.log('> Вероятность нахождения в очереди [' + i + '] сотрудников: ', getInQueueProbability(QSUtilizationRate, i));
+  console.log('> Probability serving in system {' + i + '} applications : ' + getInQueueProbability(useRate, i));
 }
 
-let failureProbability = getFailureProbability(membersFlow, flowIntencity);
-console.log('> Вероятность отказа в обслуживании сотрудника: ', failureProbability);
+let failureProbability = getFailureProbability(INTENCITY_SERVICE_FLOW, INTENCITY_INCOMING_FLOW);
+console.log('\n> Probablity of failure: ' + failureProbability);
 
-let relativeBandwidth = getRelativeBandwidth(flowIntencity, membersFlow);
-console.log('> Относительная пропускная способность: ', relativeBandwidth);
+let relativeBandwidth = getRelativeBandwidth(failureProbability);
+console.log('> Relative bandwidth: ' + relativeBandwidth);
 
-let absoluteBandwidth = getAbsoluteBandwidth(membersFlow, relativeBandwidth);
-console.log('> Абсолютная пропускная способность: ', absoluteBandwidth);
+let absoluteBandwidth = getAbsoluteBandwidth(INTENCITY_INCOMING_FLOW, relativeBandwidth);
+console.log('> Absolute bandwidth: ' + absoluteBandwidth + '\n');
 
-let inQueueMembers = getInQueueMembers(QSUtilizationRate, criticalProbability, minN);
-console.log('> Среднее число сотрудников в очереди: ', inQueueMembers);
+let inQueueMembers = getInQueueMembers(useRate, criticalProbability, minimalChannelsCount);
+console.log('> Average count applications in waiting: ' + inQueueMembers);
 
-let inServicesMembers = getInServicesMembers(QSUtilizationRate, relativeBandwidth);
-console.log('> Среднее число сотрудников, находящихся на обслуживании: ', inServicesMembers);
+let inServicesMembers = getInServicesMembers(useRate, relativeBandwidth);
+console.log('> Average count applications in service: ' + inServicesMembers);
 
 let inSystemMembers = getInSystemMembers(inQueueMembers, inServicesMembers);
-console.log('> Среднее число сотрудников в системе: ', inSystemMembers);
+console.log('> Average count applications in system: ' + inSystemMembers + '\n');
 
-let inQueueMembersTime = getInQueueMembersTime(inQueueMembers, membersFlow, relativeBandwidth);
-console.log('> Среднее время пребывания сотрудника в очереди: ', inQueueMembersTime);
+let inQueueMembersTime = getInQueueMembersTime(inQueueMembers, INTENCITY_INCOMING_FLOW, relativeBandwidth);
+console.log('> Average time applications in waiting: ' + inQueueMembersTime);
 
-let inSystemMembersTime = getInSystemMembersTime(inSystemMembers, membersFlow, relativeBandwidth);
-console.log('> Среднее время пребывания сотрудника в системе: ', inSystemMembersTime);
+let inSystemMembersTime = getInSystemMembersTime(inSystemMembers, INTENCITY_INCOMING_FLOW, relativeBandwidth);
+console.log('> Average time applications in system: ' + inSystemMembersTime);

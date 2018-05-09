@@ -5,11 +5,11 @@ const Channel = require('./Channel/Channel');
 const ApplicationHandler = require('./ApplicationHandler/ApplicationHandler');
 
 // Интенсивность входного потока 
-const INTENCITY_INCOMING_FLOW = 30; // 0.033
+const INTENCITY_INCOMING_FLOW = 30; 
 // Интенсивность потока обслуживания 
-const INTENCITY_SERVICE_FLOW = 40; // 0.025
+const INTENCITY_SERVICE_FLOW = 40; 
 // Количество каналов
-const CHANNELS_COUNT = 2; // 2 
+const CHANNELS_COUNT = 2; 
  // Время начала моделирования 
 const INITIAL_MODELING_TIME = 0;
 // Время окончания моделирования 
