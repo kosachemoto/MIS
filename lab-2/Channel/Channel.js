@@ -13,7 +13,7 @@ class Channel {
     if (waitingTime > 0) {
       // Заявка ожидает, пока канал освободится
       application.waitingTime = waitingTime;
-      application.serviceStartTime = this.serviceEndTime + waitingTime;
+      application.serviceStartTime = this.serviceEndTime;
     } else {
       // Канал ожидает поступления заявки 
       this.downtime += Math.abs(waitingTime);
@@ -26,16 +26,24 @@ class Channel {
     this.incomingFlow.push(application);
   }
 
-  GetTimeInWork() {
+GetWorkTime() {
     return this.incomingFlow.reduce((timeInWork, currentApplication) => {
       return timeInWork + currentApplication.serviceTime;
     }, 0);
   }
-
-  GetTimeInWaiting() {
+  
+  GetWaitingTime() {
     return this.incomingFlow.reduce((timeInWaiting, currentApplication) => {
       return timeInWaiting + currentApplication.waitingTime;
     }, 0);
+  }
+
+  GetServedApplicationsCount() {
+    return this.incomingFlow.length;
+  }
+
+  GetSystemSpendTime() {
+    return this.GetWorkTime() + this.GetWaitingTime();
   }
 }
 
