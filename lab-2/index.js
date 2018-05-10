@@ -9,7 +9,7 @@ const INTENCITY_INCOMING_FLOW = 30;
 // Интенсивность потока обслуживания 
 const INTENCITY_SERVICE_FLOW = 40; 
 // Количество каналов
-const CHANNELS_COUNT = 2; 
+const CHANNELS_COUNT = 3; 
  // Время начала моделирования 
 const INITIAL_MODELING_TIME = 0;
 // Время окончания моделирования 
@@ -40,6 +40,10 @@ function Main() {
 
 Main();
 
+console.log('> INTENCITY INCOMING FLOW: ' + INTENCITY_INCOMING_FLOW);
+console.log('> INTENCITY SERVICE FLOW: ' + INTENCITY_SERVICE_FLOW);
+console.log('> CHANNELS COUNT: ' + CHANNELS_COUNT + '\n');
+
 console.log('> Served applications count: ' + servedApplicationsCount);
 console.log('> Service end time: ' + applicationHandler.GetServiceEndTime() + '\n');
 
@@ -51,7 +55,7 @@ console.log('> Average system spend time: ' + applicationHandler.GetAverageSyste
 console.log('> Average waiting time: ' + applicationHandler.GetAverageWaitingTime());
 console.log('> Average downtime: ' + applicationHandler.GetAverageDonwtime() + '\n');
 
-console.log('>Use rate: ' + applicationHandler.GetUseRage());
+console.log('> Use rate: ' + applicationHandler.GetUseRage());
 
 
 function getExpRandom(lambda) {
